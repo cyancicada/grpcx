@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+// protoc --go_out=plugins=grpc:. knowing.proto
+package proto;
+
+message FindRequest {
+    repeated string tokens = 1;
+    string articleId = 2;
+}
+
+message HasOptionResponse {
+    repeated HasOption Items = 1;
+}
+
+message HasOption {
+    string token = 1;
+    int64 listen = 2;
+}
+
+
+service RegionHandler {
+    rpc GetListenAudio (FindRequest) returns (HasOptionResponse);
+}
