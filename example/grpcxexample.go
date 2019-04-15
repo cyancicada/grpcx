@@ -7,17 +7,25 @@ import (
 	"strconv"
 	"time"
 
+	"google.golang.org/grpc"
+
 	"github.com/yakaa/grpcx"
 	"github.com/yakaa/grpcx/config"
 	"github.com/yakaa/grpcx/example/proto"
-	"google.golang.org/grpc"
 )
 
 func main() {
+	c := make(chan int, 1)
 	for i := 0; i < 3; i++ {
 		go Server(i)
 	}
-	Client()
+	go Client()
+
+	for i := 4; i < 7; i++ {
+		time.Sleep(10 * time.Second)
+		go Server(i)
+	}
+	<-c
 }
 
 func Server(count int) {
@@ -46,7 +54,8 @@ func (s *RegionHandlerServer) GetListenAudio(ctx context.Context, r *proto.FindR
 
 	has := []*proto.HasOption(nil)
 	for _, t := range r.Tokens {
-		has = append(has, &proto.HasOption{Token: t + s.ServerAddress, Listen: 1})
+
+		has = append(has, &proto.HasOption{Token: t + " FROM " + s.ServerAddress, Listen: 1})
 	}
 	res := &proto.HasOptionResponse{
 		Items: has,
@@ -66,7 +75,7 @@ func Client() {
 	if err != nil {
 		panic(err)
 	}
-	conn, err := r.NextConnection()
+	conn, err := r.GetConnection()
 	if err != nil {
 		panic(err)
 	}
@@ -80,6 +89,6 @@ func Client() {
 			log.Fatal(err)
 		}
 		fmt.Println(res)
-		time.Sleep(2 * time.Second)
+		time.Sleep(1 * time.Second)
 	}
 }
