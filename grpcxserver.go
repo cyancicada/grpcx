@@ -4,13 +4,15 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/coreos/etcd/clientv3"
-	"github.com/yakaa/grpcx/config"
-	"github.com/yakaa/grpcx/register"
 	"github.com/yakaa/log4g"
 	"google.golang.org/grpc"
+
+	"github.com/yakaa/grpcx/config"
+	"github.com/yakaa/grpcx/register"
 )
 
 var (
@@ -31,6 +33,11 @@ type (
 	}
 )
 
+const (
+	colon  string = ":"
+	dns114 string = "114.114.114.114:80"
+)
+
 func MustNewGrpcxServer(conf *config.ServiceConf, rpcServiceFunc GrpcxServiceFunc) (*GrpcxServer, error) {
 	client3, err := clientv3.New(
 		clientv3.Config{
@@ -42,6 +49,11 @@ func MustNewGrpcxServer(conf *config.ServiceConf, rpcServiceFunc GrpcxServiceFun
 	if nil != err {
 		return nil, err
 	}
+	address := strings.Split(conf.ServerAddress, colon)
+	if strings.TrimSpace(address[0]) == "" {
+		address[0] = FindLocalAddress()
+	}
+	conf.ServerAddress = strings.Join(address, colon)
 	return &GrpcxServer{
 		register: register.NewRegister(
 			conf.Schema,
@@ -101,4 +113,16 @@ func (s *GrpcxServer) deadNotify() {
 		os.Exit(1) //
 	}()
 	return
+}
+
+// find local ip and port by send a udp request to 114.114.114.114:80
+func FindLocalAddress() string {
+	conn, _ := net.Dial("udp", dns114)
+	localAddress := strings.Split(conn.LocalAddr().String(), ",:")
+	defer func() {
+		if err := conn.Close(); err != nil {
+			log4g.ErrorFormat("conn.Close err %+v", err)
+		}
+	}()
+	return localAddress[0]
 }

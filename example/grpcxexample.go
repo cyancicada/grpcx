@@ -15,17 +15,12 @@ import (
 )
 
 func main() {
-	c := make(chan int, 1)
-	for i := 0; i < 3; i++ {
-		go Server(i)
+
+	for i := 0; i < 5; i++ {
+		Server(i)
 	}
 	go Client()
 
-	for i := 4; i < 7; i++ {
-		time.Sleep(10 * time.Second)
-		go Server(i)
-	}
-	<-c
 }
 
 func Server(count int) {
@@ -33,8 +28,8 @@ func Server(count int) {
 		EtcdAuth:      config.EtcdAuth{},
 		Schema:        "www.vector.com",
 		ServerName:    "knowing",
-		Endpoints:     []string{"127.0.0.1:2379"},
-		ServerAddress: "127.0.0.1:2000" + strconv.Itoa(count),
+		Endpoints:     []string{"192.168.5.100:2379", "192.168.5.101:2379"},
+		ServerAddress: ":2000" + strconv.Itoa(count),
 	}
 	demo := &RegionHandlerServer{ServerAddress: conf.ServerAddress}
 	rpcServer, err := grpcx.MustNewGrpcxServer(conf, func(server *grpc.Server) {
@@ -67,7 +62,7 @@ func Client() {
 	conf := &config.ClientConf{
 		EtcdAuth:  config.EtcdAuth{},
 		Target:    "www.vector.com:///knowing",
-		Endpoints: []string{"127.0.0.1:2379"},
+		Endpoints: []string{"192.168.5.100:2379", "192.168.5.101:2379"},
 		WithBlock: false,
 	}
 
