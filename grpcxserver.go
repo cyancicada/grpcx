@@ -1,6 +1,7 @@
 package grpcx
 
 import (
+	"errors"
 	"net"
 	"os"
 	"os/signal"
@@ -34,8 +35,9 @@ type (
 )
 
 const (
-	colon  string = ":"
-	dns114 string = "114.114.114.114:80"
+	colon     string = ":"
+	googleDns string = "8.8.8.8:80"
+	localHost string = "127.0.0.1"
 )
 
 func MustNewGrpcxServer(conf *config.ServiceConf, rpcServiceFunc GrpcxServiceFunc) (*GrpcxServer, error) {
@@ -50,6 +52,9 @@ func MustNewGrpcxServer(conf *config.ServiceConf, rpcServiceFunc GrpcxServiceFun
 		return nil, err
 	}
 	address := strings.Split(conf.ServerAddress, colon)
+	if len(address) == 1 {
+		return nil, errors.New("ServerAddress must container :")
+	}
 	if strings.TrimSpace(address[0]) == "" {
 		address[0] = FindLocalAddress()
 	}
@@ -115,10 +120,14 @@ func (s *GrpcxServer) deadNotify() {
 	return
 }
 
-// find local ip and port by send a udp request to 114.114.114.114:80
+// find local ip and port by send a udp request to 8.8.8.8:80
 func FindLocalAddress() string {
-	conn, _ := net.Dial("udp", dns114)
-	localAddress := strings.Split(conn.LocalAddr().String(), ",:")
+	conn, err := net.Dial("udp", googleDns)
+	if err != nil {
+		log4g.ErrorFormat("find local ip fail by googleDns [%s]  ,err is %+v", googleDns, err)
+		return localHost
+	}
+	localAddress := strings.Split(conn.LocalAddr().String(), colon)
 	defer func() {
 		if err := conn.Close(); err != nil {
 			log4g.ErrorFormat("conn.Close err %+v", err)

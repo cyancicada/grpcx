@@ -16,10 +16,13 @@ import (
 
 func main() {
 
-	for i := 0; i < 5; i++ {
-		Server(i)
+	for i := 1; i < 5; i++ {
+		go func(j int) {
+			Server(j)
+		}(i)
 	}
-	go Client()
+
+	Client()
 
 }
 
@@ -28,7 +31,7 @@ func Server(count int) {
 		EtcdAuth:      config.EtcdAuth{},
 		Schema:        "www.vector.com",
 		ServerName:    "knowing",
-		Endpoints:     []string{"192.168.5.100:2379", "192.168.5.101:2379"},
+		Endpoints:     []string{"127.0.0.1:2379"},
 		ServerAddress: ":2000" + strconv.Itoa(count),
 	}
 	demo := &RegionHandlerServer{ServerAddress: conf.ServerAddress}
@@ -62,7 +65,7 @@ func Client() {
 	conf := &config.ClientConf{
 		EtcdAuth:  config.EtcdAuth{},
 		Target:    "www.vector.com:///knowing",
-		Endpoints: []string{"192.168.5.100:2379", "192.168.5.101:2379"},
+		Endpoints: []string{"127.0.0.1:2379"},
 		WithBlock: false,
 	}
 
