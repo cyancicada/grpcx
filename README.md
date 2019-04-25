@@ -24,7 +24,7 @@ function main (){
                 Schema:        "www.vector.com", // //2
                 ServerName:    "knowing",//3
                 Endpoints:     []string{"127.0.0.1:2379"},//4
-                ServerAddress: "127.0.0.1:2000"+strconv.Itoa(i),
+                ServerAddress: ":2000"+strconv.Itoa(i),
             }
             demo := &RegionHandlerServer{ServerAddress: conf.ServerAddress}
             rpcServer, err := grpcx.MustNewGrpcxServer(conf, func(server *grpc.Server) {
