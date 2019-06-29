@@ -1,11 +1,9 @@
 package grpcx
 
 import (
-	"errors"
 	"net"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	"github.com/coreos/etcd/clientv3"
@@ -34,12 +32,6 @@ type (
 	}
 )
 
-const (
-	colon     string = ":"
-	googleDns string = "8.8.8.8:80"
-	localHost string = "127.0.0.1"
-)
-
 func MustNewGrpcxServer(conf *config.ServiceConf, rpcServiceFunc GrpcxServiceFunc) (*GrpcxServer, error) {
 	client3, err := clientv3.New(
 		clientv3.Config{
@@ -51,14 +43,6 @@ func MustNewGrpcxServer(conf *config.ServiceConf, rpcServiceFunc GrpcxServiceFun
 	if nil != err {
 		return nil, err
 	}
-	address := strings.Split(conf.ServerAddress, colon)
-	if len(address) == 1 {
-		return nil, errors.New("ServerAddress must container :")
-	}
-	if strings.TrimSpace(address[0]) == "" {
-		address[0] = FindLocalAddress()
-	}
-	conf.ServerAddress = strings.Join(address, colon)
 	return &GrpcxServer{
 		register: register.NewRegister(
 			conf.Schema,
@@ -118,20 +102,4 @@ func (s *GrpcxServer) deadNotify() {
 		os.Exit(1) //
 	}()
 	return
-}
-
-// find local ip and port by send a udp request to 8.8.8.8:80
-func FindLocalAddress() string {
-	conn, err := net.Dial("udp", googleDns)
-	if err != nil {
-		log4g.ErrorFormat("find local ip fail by googleDns [%s]  ,err is %+v", googleDns, err)
-		return localHost
-	}
-	localAddress := strings.Split(conn.LocalAddr().String(), colon)
-	defer func() {
-		if err := conn.Close(); err != nil {
-			log4g.ErrorFormat("conn.Close err %+v", err)
-		}
-	}()
-	return localAddress[0]
 }

@@ -14,6 +14,8 @@ import (
 	"github.com/yakaa/grpcx/example/proto"
 )
 
+var Endpoints = []string{"192.168.5.100:2379"}
+
 func main() {
 
 	for i := 1; i < 5; i++ {
@@ -31,7 +33,7 @@ func Server(count int) {
 		EtcdAuth:      config.EtcdAuth{},
 		Schema:        "www.vector.com",
 		ServerName:    "knowing",
-		Endpoints:     []string{"127.0.0.1:2379"},
+		Endpoints:     Endpoints,
 		ServerAddress: ":2000" + strconv.Itoa(count),
 	}
 	demo := &RegionHandlerServer{ServerAddress: conf.ServerAddress}
@@ -65,7 +67,7 @@ func Client() {
 	conf := &config.ClientConf{
 		EtcdAuth:  config.EtcdAuth{},
 		Target:    "www.vector.com:///knowing",
-		Endpoints: []string{"127.0.0.1:2379"},
+		Endpoints: Endpoints,
 		WithBlock: false,
 	}
 
