@@ -2,11 +2,11 @@ package register
 
 import (
 	"context"
-	"crypto/md5"
 	"fmt"
 	"time"
 
 	"github.com/coreos/etcd/clientv3"
+	"github.com/satori/go.uuid"
 	"github.com/yakaa/log4g"
 )
 
@@ -38,7 +38,7 @@ func NewRegister(
 		interval:      3 * time.Second,
 		leaseTime:     6,
 		stop:          make(chan bool, 1),
-		fullAddress:   fmt.Sprintf("%s/%s/%x", schema, serverName, md5.Sum([]byte(serverAddress))),
+		fullAddress:   fmt.Sprintf("%s/%s/%s", schema, serverName, uuid.NewV4().String()),
 	}
 }
 

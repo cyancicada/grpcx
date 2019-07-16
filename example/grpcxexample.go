@@ -14,7 +14,7 @@ import (
 	"github.com/yakaa/grpcx/example/proto"
 )
 
-var Endpoints = []string{"192.168.5.100:2379"}
+var Endpoints = []string{"192.168.1.200:2379"}
 
 func main() {
 
